@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  company   String?
+  phone     String?
+  email     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quotes    Quote[]
+
+  @@map("clients")
+}
+
+model Product {
+  id                 String              @id @default(cuid())
+  name               String
+  category           String
+  price              Float
+  stock              Int                 @default(0)
+  photoUrl           String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  quoteItems         QuoteItem[]
+  competitionEntries CompetitionEntry[]
+  supplierQuotes     SupplierQuote[]
+  marketObservations MarketObservation[]
+
+  @@map("products")
+}
+
+model Quote {
+  id        String      @id @default(cuid())
+  number    Int         @default(0) @unique
+  clientId  String
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  notes     String?
+  subtotal  Float
+  total     Float
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     QuoteItem[]
+
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id        String  @id @default(cuid())
+  quoteId   String
+  quote     Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  unitPrice Float
+  subtotal  Float
+
+  @@map("quote_items")
+}
+
+model CompetitionEntry {
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  competitorPrice Float
+  source          String
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@map("competition_entries")
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  company   String?
+  country   String?
+  currency  String   @default("USD")
+  contact   String?
+  email     String?
+  phone     String?
+  website   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  costConfig SupplierCostConfig?
+  quotes     SupplierQuote[]
+
+  @@map("suppliers")
+}
+
+model SupplierCostConfig {
+  id                     String   @id @default(cuid())
+  supplierId             String   @unique
+  supplier               Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  nacionalizacionPct     Float?
+  nacionalizacionType    String   @default("PERCENT")
+  comisionPct            Float?
+  comisionType           String   @default("PERCENT")
+  costosFinancierosPct   Float?
+  costosFinancierosType  String   @default("PERCENT")
+  envio                  Float?
+  envioType              String   @default("FIXED")
+  seguro                 Float?
+  seguroType             String   @default("FIXED")
+  otrosGastos            Float?
+  otrosGastosType        String   @default("FIXED")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("supplier_cost_configs")
+}
+
+model SupplierQuote {
+  id           String   @id @default(cuid())
+  supplierId   String
+  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplierCode String?
+  fobCost      Float
+  minQuantity  Int?
+  currency     String   @default("USD")
+  date         DateTime @default(now())
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([productId])
+  @@map("supplier_quotes")
+}
+
+model MarketObservation {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  source        String
+  store         String?
+  url           String?
+  observedPrice Float
+  currency      String   @default("ARS")
+  date          DateTime @default(now())
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@map("market_observations")
+}
+
+model CostSettings {
+  id                   String   @id @default("global")
+  nacionalizacionPct   Float?
+  comisionPct          Float?
+  costosFinancierosPct Float?
+  envio                Float?
+  seguro               Float?
+  otrosGastos          Float?
+  updatedAt            DateTime @updatedAt
+
+  @@map("cost_settings")
+}
+
+model CompanySettings {
+  id                String   @id @default("global")
+  name              String   @default("German CRM")
+  email             String?
+  phone             String?
+  address           String?
+  website           String?
+  quoteValidityDays Int      @default(30)
+  conditions        String?  @default("Validez del presupuesto: 30 días desde la fecha de emisión\nForma de pago: a convenir (transferencia, cheque, efectivo)\nTiempo de entrega: a confirmar según disponibilidad de stock\nGarantía: según términos del fabricante\nDisponibilidad sujeta a stock al momento de la confirmación")
+  updatedAt         DateTime @updatedAt
+
+  @@map("company_settings")
+}
