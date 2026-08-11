@@ -7,6 +7,7 @@ import {
   Factory,
   HelpCircle,
   LayoutDashboard,
+  LogOut,
   Menu,
   Package,
   PanelLeftClose,
@@ -26,11 +27,18 @@ import {
   SIDEBAR_WIDTH_COLLAPSED,
   SIDEBAR_WIDTH_EXPANDED,
 } from "@/lib/constants";
+import { logoutAction } from "@/app/actions/auth.actions";
 import { Avatar } from "@/components/shared/avatar";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { Notifications } from "@/components/layout/notifications";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Tooltip,
@@ -164,12 +172,45 @@ function NavLink({
   );
 }
 
+function AccountMenu({
+  userEmail,
+  children,
+}: {
+  userEmail?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <div className="px-2 py-1.5">
+          <p className="truncate text-[13px] font-medium">Administrador</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {userEmail ?? ""}
+          </p>
+        </div>
+        <DropdownMenuItem
+          variant="destructive"
+          onSelect={() => {
+            void logoutAction();
+          }}
+        >
+          <LogOut className="size-4" />
+          Cerrar sesión
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function SidebarContent({
   collapsed = false,
+  userEmail,
   onToggle,
   onNavigate,
 }: {
   collapsed?: boolean;
+  userEmail?: string;
   onToggle?: () => void;
   onNavigate?: () => void;
 }) {
@@ -238,20 +279,23 @@ function SidebarContent({
         ) : null}
 
         <CollapsedTooltip collapsed={collapsed} label="Administrador">
-          <div
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-2 py-2",
-              collapsed && "justify-center px-0",
-            )}
-          >
-            <Avatar name="Administrador" />
-            <FadeLabel show={!collapsed} className="min-w-0">
-              <p className="truncate text-[13px] font-medium">Administrador</p>
-              <p className="truncate text-xs text-muted-foreground">
-                german@local
-              </p>
-            </FadeLabel>
-          </div>
+          <AccountMenu userEmail={userEmail}>
+            <button
+              type="button"
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-secondary/70",
+                collapsed && "justify-center px-0",
+              )}
+            >
+              <Avatar name="Administrador" />
+              <FadeLabel show={!collapsed} className="min-w-0">
+                <p className="truncate text-[13px] font-medium">Administrador</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {userEmail ?? ""}
+                </p>
+              </FadeLabel>
+            </button>
+          </AccountMenu>
         </CollapsedTooltip>
       </div>
     </div>
@@ -261,9 +305,11 @@ function SidebarContent({
 export function AppShell({
   children,
   defaultCollapsed = false,
+  userEmail,
 }: {
   children: React.ReactNode;
   defaultCollapsed?: boolean;
+  userEmail?: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -287,7 +333,11 @@ export function AppShell({
           transition={{ duration: 0.25, ease: EASE }}
           className="sticky top-0 z-30 hidden h-screen shrink-0 overflow-hidden border-r border-sidebar-border bg-sidebar lg:block"
         >
-          <SidebarContent collapsed={collapsed} onToggle={toggleCollapsed} />
+          <SidebarContent
+            collapsed={collapsed}
+            userEmail={userEmail}
+            onToggle={toggleCollapsed}
+          />
         </motion.aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -309,7 +359,10 @@ export function AppShell({
                     side="left"
                     className="w-[280px] border-r border-border/70 p-0"
                   >
-                    <SidebarContent onNavigate={() => setOpen(false)} />
+                    <SidebarContent
+                      userEmail={userEmail}
+                      onNavigate={() => setOpen(false)}
+                    />
                   </SheetContent>
                 </Sheet>
               </div>
@@ -342,13 +395,15 @@ export function AppShell({
                   </Dialog>
                 </div>
                 <Notifications />
-                <button
-                  type="button"
-                  className="group ml-1 flex items-center gap-2 rounded-full p-1 pr-1 transition-colors hover:bg-secondary/70"
-                  aria-label="Cuenta de usuario"
-                >
-                  <Avatar name="Administrador" className="size-8 text-[10px]" />
-                </button>
+                <AccountMenu userEmail={userEmail}>
+                  <button
+                    type="button"
+                    className="group ml-1 flex items-center gap-2 rounded-full p-1 pr-1 transition-colors hover:bg-secondary/70"
+                    aria-label="Cuenta de usuario"
+                  >
+                    <Avatar name="Administrador" className="size-8 text-[10px]" />
+                  </button>
+                </AccountMenu>
               </div>
             </div>
           </header>

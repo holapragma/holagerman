@@ -18,7 +18,7 @@ model Client {
   updatedAt DateTime @updatedAt
   quotes    Quote[]
 
-  @@map("clients")
+  @@map("german_crm_clients")
 }
 
 model Product {
@@ -35,7 +35,7 @@ model Product {
   supplierQuotes     SupplierQuote[]
   marketObservations MarketObservation[]
 
-  @@map("products")
+  @@map("german_crm_products")
 }
 
 model Quote {
@@ -50,7 +50,7 @@ model Quote {
   updatedAt DateTime    @updatedAt
   items     QuoteItem[]
 
-  @@map("quotes")
+  @@map("german_crm_quotes")
 }
 
 model QuoteItem {
@@ -63,7 +63,7 @@ model QuoteItem {
   unitPrice Float
   subtotal  Float
 
-  @@map("quote_items")
+  @@map("german_crm_quote_items")
 }
 
 model CompetitionEntry {
@@ -75,7 +75,7 @@ model CompetitionEntry {
   updatedAt       DateTime @updatedAt
   createdAt       DateTime @default(now())
 
-  @@map("competition_entries")
+  @@map("german_crm_competition_entries")
 }
 
 model Supplier {
@@ -95,7 +95,7 @@ model Supplier {
   costConfig SupplierCostConfig?
   quotes     SupplierQuote[]
 
-  @@map("suppliers")
+  @@map("german_crm_suppliers")
 }
 
 model SupplierCostConfig {
@@ -117,7 +117,7 @@ model SupplierCostConfig {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
-  @@map("supplier_cost_configs")
+  @@map("german_crm_supplier_cost_configs")
 }
 
 model SupplierQuote {
@@ -136,7 +136,7 @@ model SupplierQuote {
   updatedAt    DateTime @updatedAt
 
   @@index([productId])
-  @@map("supplier_quotes")
+  @@map("german_crm_supplier_quotes")
 }
 
 model MarketObservation {
@@ -154,7 +154,7 @@ model MarketObservation {
   updatedAt     DateTime @updatedAt
 
   @@index([productId])
-  @@map("market_observations")
+  @@map("german_crm_market_observations")
 }
 
 model CostSettings {
@@ -167,7 +167,7 @@ model CostSettings {
   otrosGastos          Float?
   updatedAt            DateTime @updatedAt
 
-  @@map("cost_settings")
+  @@map("german_crm_cost_settings")
 }
 
 model CompanySettings {
@@ -181,5 +181,5 @@ model CompanySettings {
   conditions        String?  @default("Validez del presupuesto: 30 días desde la fecha de emisión\nForma de pago: a convenir (transferencia, cheque, efectivo)\nTiempo de entrega: a confirmar según disponibilidad de stock\nGarantía: según términos del fabricante\nDisponibilidad sujeta a stock al momento de la confirmación")
   updatedAt         DateTime @updatedAt
 
-  @@map("company_settings")
+  @@map("german_crm_company_settings")
 }

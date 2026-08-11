@@ -56,6 +56,7 @@ MVP funcional, preparado para producción. Stack:
 - **pdf-lib** para generación de PDFs
 - **TanStack Table** (solo para el data-table genérico, ver Diseño)
 - **motion** (Framer Motion) para animaciones
+- **Supabase Auth** (`@supabase/supabase-js` + `@supabase/ssr`) para el login
 - Despliegue en **Vercel**
 
 La migración de SQLite a PostgreSQL/Supabase ya se hizo a nivel de código (`schema.prisma`,
@@ -92,6 +93,32 @@ Vercel"). El historial de migraciones de la etapa SQLite quedó archivado en
 
 El sistema va a seguir creciendo, pero módulo por módulo, solo cuando resuelva un problema
 real. No adelantar funcionalidad.
+
+---
+
+## Autenticación
+
+Login con **Supabase Auth**, email + contraseña. Decisiones deliberadas, no default:
+
+- **No hay signup.** No existe pantalla de registro ni endpoint que la exponga. Los
+  usuarios se crean a mano desde el dashboard de Supabase (Authentication → Users → Add
+  user), tildando **"Auto Confirm User"** para que el mail quede verificado al crearlo —
+  no hay flujo de confirmación por mail ni de recuperación de contraseña todavía.
+- El signup público debe estar deshabilitado en el proyecto de Supabase
+  (Authentication → Sign In / Providers → "Allow new users to sign up" en off), como
+  segunda barrera además de no tener UI de registro.
+- Pensado para uso de un solo administrador por ahora. Si se suman usuarios, se agregan de
+  la misma forma manual — no construir gestión de usuarios/roles sin necesidad concreta.
+- `middleware.ts` (raíz) protege todas las rutas salvo `/login`: redirige a `/login` si no
+  hay sesión, y a `/` si ya hay sesión y se intenta entrar a `/login`.
+- `src/lib/supabase/server.ts` — cliente de Supabase para Server Components/Actions.
+  `src/lib/supabase/middleware.ts` — refresco de sesión + redirects, usado por
+  `middleware.ts`.
+- `src/app/actions/auth.actions.ts` — `loginAction`/`logoutAction`, mismo patrón que el
+  resto de `actions/` (Zod + `{ success, error }`).
+- Todas las rutas de la app viven en el route group `src/app/(app)/`, cuyo `layout.tsx`
+  envuelve con `AppShell` y obtiene el mail de la sesión server-side. `/login` queda fuera
+  del grupo y no tiene sidebar.
 
 ---
 
@@ -230,6 +257,8 @@ mismo problema, no romper la consistencia visual entre módulos.
   el CLI de Prisma para migraciones (`prisma.config.ts`).
 - Ambas salen de Supabase → Project Settings → Database → Connection string. Detalle y guía
   de deploy completa en `README.md`.
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase Auth (ver
+  sección Autenticación). Salen de Supabase → Project Settings → API.
 
 ---
 

@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "Ingresá tu contraseña"),
+});
+
+export type LoginFormValues = z.infer<typeof loginSchema>;
+
 export const clientSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   company: z.string().optional(),
