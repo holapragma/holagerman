@@ -89,7 +89,8 @@ Vercel"). El historial de migraciones de la etapa SQLite quedó archivado en
   comparador de costos/precio sugerido (ver modelo conceptual abajo).
 - **Configuración** (`/configuracion`): parámetros globales de cálculo de costos (usados
   como default cuando un proveedor no define los suyos) y datos de la empresa/condiciones
-  comerciales que aparecen en los presupuestos.
+  comerciales que aparecen en los presupuestos, incluida la alícuota de **IVA** (`ivaPct`
+  en `CompanySettings`).
 
 El sistema va a seguir creciendo, pero módulo por módulo, solo cuando resuelva un problema
 real. No adelantar funcionalidad.
@@ -209,6 +210,12 @@ Reglas de negocio:
 - El PDF se genera en `src/app/api/presupuestos/[id]/pdf/route.ts`, con nombre de archivo
   `Presupuesto N° {number} - {cliente}.pdf` (headers `filename` + `filename*=UTF-8''` para
   compatibilidad con acentos).
+- **IVA opcional por presupuesto.** Al armar un presupuesto se elige con/sin IVA (por
+  defecto, con IVA). No hay alícuota editable por presupuesto, solo el on/off — el % sale
+  siempre del valor global de `Configuración`. El presupuesto guarda la alícuota aplicada
+  en `Quote.ivaPct` (`null` = sin IVA) como snapshot del momento de creación, igual que las
+  cotizaciones de proveedores: si el % global cambia después, los presupuestos ya emitidos
+  no se recalculan.
 
 ---
 

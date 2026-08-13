@@ -32,6 +32,7 @@ export function CompanySettingsForm() {
       website: "",
       quoteValidityDays: 30,
       conditions: "",
+      ivaPct: 21,
     },
   });
 
@@ -48,6 +49,7 @@ export function CompanySettingsForm() {
         website: settings.website ?? "",
         quoteValidityDays: settings.quoteValidityDays,
         conditions: settings.conditions,
+        ivaPct: settings.ivaPct,
       });
     })();
     return () => {
@@ -154,26 +156,53 @@ export function CompanySettingsForm() {
           </p>
         </div>
 
-        <FormField
-          control={form.control}
-          name="quoteValidityDays"
-          render={({ field }) => (
-            <FormItem className="max-w-[220px]">
-              <FormLabel>Validez del presupuesto (días)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  step={1}
-                  placeholder="30"
-                  {...field}
-                  value={field.value ?? ""}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-4 sm:grid-cols-2 sm:max-w-[460px]">
+          <FormField
+            control={form.control}
+            name="quoteValidityDays"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Validez del presupuesto (días)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    step={1}
+                    placeholder="30"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="ivaPct"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>IVA (%)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    placeholder="21"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Alícuota que se puede aplicar al armar un presupuesto.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

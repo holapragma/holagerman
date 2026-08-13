@@ -83,6 +83,7 @@ export type CreateQuoteInput = {
   clientId: string;
   notes?: string;
   items: CreateQuoteItemInput[];
+  ivaPct: number | null;
 };
 
 export type CostType = "FIXED" | "PERCENT";
@@ -110,6 +111,7 @@ export type CompanySettingsConfig = {
   website: string | null;
   quoteValidityDays: number;
   conditions: string;
+  ivaPct: number;
 };
 
 export type CostBreakdown = {

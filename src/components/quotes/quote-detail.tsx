@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Download, FileText, Pencil } from "lucide-react";
 import type { QuoteWithRelations } from "@/types";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -142,6 +142,16 @@ export function QuoteDetail({ quote }: { quote: QuoteWithRelations }) {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="tabular-nums">{formatCurrency(quote.subtotal)}</span>
               </div>
+              {quote.ivaPct != null ? (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    IVA ({formatPercent(quote.ivaPct)})
+                  </span>
+                  <span className="tabular-nums">
+                    {formatCurrency(quote.total - quote.subtotal)}
+                  </span>
+                </div>
+              ) : null}
               <SeparatorLine />
               <div className="flex items-end justify-between pt-1">
                 <span className="text-[15px] font-semibold">Total</span>

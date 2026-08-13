@@ -104,6 +104,10 @@ export class PdfService {
     this.summaryComponent.setData({
       subtotal: quote.subtotal,
       discount: 0,
+      iva:
+        quote.ivaPct != null
+          ? { pct: quote.ivaPct, amount: quote.total - quote.subtotal }
+          : undefined,
       total: quote.total,
     });
     this.observationsComponent.setNotes(quote.notes || "");
@@ -203,7 +207,11 @@ export class PdfService {
     }
     if (component === this.summaryComponent) {
       const hasDiscount = false;
-      return hasDiscount ? 130 : 110;
+      const hasIva = quote.ivaPct != null;
+      let height = 110;
+      if (hasDiscount) height += 20;
+      if (hasIva) height += 20;
+      return height;
     }
     if (component === this.observationsComponent) {
       if (!quote.notes) return 0;

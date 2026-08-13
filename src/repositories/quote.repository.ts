@@ -27,6 +27,9 @@ export class QuoteRepository {
       (acc, item) => acc + item.quantity * item.unitPrice,
       0,
     );
+    const total = input.ivaPct
+      ? subtotal * (1 + input.ivaPct / 100)
+      : subtotal;
 
     return prisma.$transaction(async (tx) => {
       const lastQuote = await tx.quote.findFirst({
@@ -39,7 +42,8 @@ export class QuoteRepository {
           clientId: input.clientId,
           notes: input.notes || null,
           subtotal,
-          total: subtotal,
+          ivaPct: input.ivaPct,
+          total,
           items: {
             create: input.items.map((item) => ({
               productId: item.productId,

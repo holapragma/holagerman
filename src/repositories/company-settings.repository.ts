@@ -34,6 +34,7 @@ export class CompanySettingsRepository {
       website: settings.website ?? null,
       quoteValidityDays: settings.quoteValidityDays,
       conditions: settings.conditions ?? "",
+      ivaPct: settings.ivaPct,
     };
   }
 }

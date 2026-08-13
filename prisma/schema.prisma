@@ -45,6 +45,7 @@ model Quote {
   client    Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
   notes     String?
   subtotal  Float
+  ivaPct    Float?
   total     Float
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -179,6 +180,7 @@ model CompanySettings {
   website           String?
   quoteValidityDays Int      @default(30)
   conditions        String?  @default("Validez del presupuesto: 30 días desde la fecha de emisión\nForma de pago: a convenir (transferencia, cheque, efectivo)\nTiempo de entrega: a confirmar según disponibilidad de stock\nGarantía: según términos del fabricante\nDisponibilidad sujeta a stock al momento de la confirmación")
+  ivaPct            Float    @default(21)
   updatedAt         DateTime @updatedAt
 
   @@map("german_crm_company_settings")

@@ -4,6 +4,7 @@ import { drawText, drawLine, drawRect, SPACING, FONT_SIZES, BORDER_RADIUS, forma
 export interface SummaryData {
   subtotal: number;
   discount?: number;
+  iva?: { pct: number; amount: number };
   total: number;
 }
 
@@ -39,6 +40,19 @@ export class SummaryComponent implements Component {
     if (this.data.discount && this.data.discount > 0) {
       await drawText(ctx, "Descuento", { x: rowLabelX, y, size: FONT_SIZES.sm, color: colors.textMuted, font: "regular" });
       await drawText(ctx, `- ${formatCurrency(this.data.discount)}`, {
+        x: valueX,
+        y,
+        size: FONT_SIZES.sm,
+        color: colors.textSecondary,
+        font: "regular",
+        align: "right",
+      });
+      y -= FONT_SIZES.sm * 1.7;
+    }
+
+    if (this.data.iva) {
+      await drawText(ctx, `IVA (${this.data.iva.pct}%)`, { x: rowLabelX, y, size: FONT_SIZES.sm, color: colors.textMuted, font: "regular" });
+      await drawText(ctx, formatCurrency(this.data.iva.amount), {
         x: valueX,
         y,
         size: FONT_SIZES.sm,

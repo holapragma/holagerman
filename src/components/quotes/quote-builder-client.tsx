@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Client, Product } from "@/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createQuoteAction } from "@/app/actions/quotes";
 import { PageHeader } from "@/components/layout/page-header";
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 
 type QuoteLine = {
   productId: string;
@@ -35,14 +36,17 @@ const panelClass =
 export function QuoteBuilderClient({
   clients,
   products,
+  defaultIvaPct,
   initialQuote,
 }: {
   clients: Client[];
   products: Product[];
+  defaultIvaPct: number;
   initialQuote?: {
     originalNumber?: number;
     clientId: string;
     notes?: string | null;
+    includeIva?: boolean;
     items: QuoteLine[];
   };
 }) {
@@ -52,11 +56,14 @@ export function QuoteBuilderClient({
   const [notes, setNotes] = useState(initialQuote?.notes ?? "");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [items, setItems] = useState<QuoteLine[]>(initialQuote?.items ?? []);
+  const [includeIva, setIncludeIva] = useState(initialQuote?.includeIva ?? true);
 
   const subtotal = useMemo(
     () => items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0),
     [items],
   );
+  const ivaAmount = includeIva ? subtotal * (defaultIvaPct / 100) : 0;
+  const total = subtotal + ivaAmount;
 
   const itemsCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -122,6 +129,7 @@ export function QuoteBuilderClient({
         clientId,
         notes: notes || undefined,
         items,
+        includeIva,
       });
 
       if (result.success && result.quoteId) {
@@ -321,13 +329,32 @@ export function QuoteBuilderClient({
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-medium tabular-nums">{formatCurrency(subtotal)}</span>
               </div>
+              {includeIva ? (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    IVA ({formatPercent(defaultIvaPct)})
+                  </span>
+                  <span className="font-medium tabular-nums">{formatCurrency(ivaAmount)}</span>
+                </div>
+              ) : null}
               <Separator />
               <div className="flex items-end justify-between">
                 <span className="text-[15px] font-semibold">Total</span>
                 <span className="text-[26px] leading-none font-semibold tracking-tight tabular-nums">
-                  {formatCurrency(subtotal)}
+                  {formatCurrency(total)}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between rounded-[14px] bg-secondary/50 px-4 py-3">
+              <Label htmlFor="include-iva" className="text-sm font-medium">
+                Incluir IVA ({formatPercent(defaultIvaPct)})
+              </Label>
+              <Switch
+                id="include-iva"
+                checked={includeIva}
+                onCheckedChange={setIncludeIva}
+              />
             </div>
 
             <div className="mt-6">

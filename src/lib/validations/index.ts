@@ -41,6 +41,7 @@ export const quoteSchema = z.object({
   clientId: z.string().min(1, "Seleccioná un cliente"),
   notes: z.string().optional(),
   items: z.array(quoteItemSchema).min(1, "Agregá al menos un producto"),
+  includeIva: z.boolean(),
 });
 
 export type QuoteFormValues = z.infer<typeof quoteSchema>;
@@ -146,6 +147,7 @@ export const companySettingsSchema = z.object({
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   quoteValidityDays: z.coerce.number().int().min(1, "Debe ser al menos 1 día"),
   conditions: z.string().optional(),
+  ivaPct: z.coerce.number().min(0).max(100),
 });
 
 export type CompanySettingsFormValues = z.infer<typeof companySettingsSchema>;
