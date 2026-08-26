@@ -3,11 +3,14 @@ import { drawText, drawLine, FONT_SIZES } from "../pdf.utils";
 
 const DEFAULT_COMPANY_INFO: CompanyInfo = {
   name: "German CRM",
+  legalName: null,
+  taxId: null,
   email: null,
   phone: null,
   address: null,
   website: null,
   quoteValidityDays: 30,
+  logo: null,
 };
 
 export class FooterComponent implements Component {
@@ -22,7 +25,7 @@ export class FooterComponent implements Component {
     const { width, margin, colors, pageNumber, totalPages } = ctx;
 
     const lineHeight = 13;
-    const footerY = margin + lineHeight * 3 + 2;
+    const footerY = margin + lineHeight + 2;
 
     await drawLine(ctx, {
       x1: margin,
@@ -33,8 +36,7 @@ export class FooterComponent implements Component {
       thickness: 0.75,
     });
 
-    const contactLine = [this.companyInfo.email, this.companyInfo.phone].filter(Boolean).join("  ·  ");
-
+    // Dirección y contacto ya salen en el encabezado; acá solo la firma mínima.
     await drawText(ctx, this.companyInfo.name, {
       x: margin,
       y: footerY,
@@ -43,33 +45,13 @@ export class FooterComponent implements Component {
       font: "bold",
     });
 
-    if (this.companyInfo.address) {
-      await drawText(ctx, this.companyInfo.address, {
+    if (this.companyInfo.website) {
+      await drawText(ctx, this.companyInfo.website, {
         x: margin,
         y: footerY - lineHeight,
         size: FONT_SIZES.xs - 1,
         color: colors.textMuted,
         font: "regular",
-      });
-    }
-
-    if (contactLine) {
-      await drawText(ctx, contactLine, {
-        x: margin,
-        y: footerY - lineHeight * 2,
-        size: FONT_SIZES.xs - 1,
-        color: colors.textMuted,
-        font: "regular",
-      });
-    }
-
-    if (this.companyInfo.website) {
-      await drawText(ctx, this.companyInfo.website, {
-        x: margin,
-        y: footerY - lineHeight * 3,
-        size: FONT_SIZES.xs - 1,
-        color: colors.textMuted,
-        font: "bold",
       });
     }
 
@@ -82,6 +64,6 @@ export class FooterComponent implements Component {
       align: "right",
     });
 
-    return footerY - lineHeight * 3 - 10;
+    return footerY - lineHeight - 10;
   }
 }

@@ -3,6 +3,8 @@ import type { PDFDocument, PDFFont, PDFPage } from "pdf-lib";
 
 export type Component = {
   render(ctx: LayoutContext): Promise<number>;
+  /** Alto aproximado, para decidir saltos de página antes de dibujar. */
+  estimateHeight?(ctx: LayoutContext): number;
 };
 
 export interface LayoutContext {
@@ -47,6 +49,7 @@ export interface Fonts {
 
 export interface ProductRow {
   name: string;
+  description?: string | null;
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -58,11 +61,19 @@ export interface SummaryData {
   total: number;
 }
 
+export interface CompanyLogoData {
+  mimeType: string;
+  data: Uint8Array;
+}
+
 export interface CompanyInfo {
   name: string;
+  legalName: string | null;
+  taxId: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
   website: string | null;
   quoteValidityDays: number;
+  logo?: CompanyLogoData | null;
 }

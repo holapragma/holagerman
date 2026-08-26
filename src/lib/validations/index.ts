@@ -32,19 +32,41 @@ export const productSchema = z.object({
 export type ProductFormValues = z.infer<typeof productSchema>;
 
 export const quoteItemSchema = z.object({
-  productId: z.string().min(1),
+  productId: z.string().nullable().optional(),
+  name: z.string().trim().min(1, "Escribí el nombre del ítem"),
+  description: z.string().optional(),
   quantity: z.coerce.number().int().min(1, "Cantidad mínima: 1"),
   unitPrice: z.coerce.number().min(0, "Precio inválido"),
+  /** Solo para ítems manuales: además de cotizarlo, crearlo en el catálogo. */
+  saveAsProduct: z.boolean().optional(),
 });
+
+export type QuoteItemFormValues = z.infer<typeof quoteItemSchema>;
 
 export const quoteSchema = z.object({
   clientId: z.string().min(1, "Seleccioná un cliente"),
+  companyId: z.string().nullable().optional(),
   notes: z.string().optional(),
-  items: z.array(quoteItemSchema).min(1, "Agregá al menos un producto"),
+  items: z.array(quoteItemSchema).min(1, "Agregá al menos un ítem"),
   includeIva: z.boolean(),
 });
 
 export type QuoteFormValues = z.infer<typeof quoteSchema>;
+
+export const companySchema = z.object({
+  name: z.string().trim().min(2, "El nombre debe tener al menos 2 caracteres"),
+  legalName: z.string().optional(),
+  taxId: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  website: z.string().url("URL inválida").optional().or(z.literal("")),
+  quoteValidityDays: z.coerce.number().int().min(1, "Debe ser al menos 1 día"),
+  conditions: z.string().optional(),
+  active: z.boolean(),
+});
+
+export type CompanyFormValues = z.infer<typeof companySchema>;
 
 export const competitionSchema = z.object({
   productId: z.string().min(1, "Seleccioná un producto"),
@@ -140,13 +162,6 @@ export const costSettingsSchema = z.object({
 export type CostSettingsFormValues = z.infer<typeof costSettingsSchema>;
 
 export const companySettingsSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-  quoteValidityDays: z.coerce.number().int().min(1, "Debe ser al menos 1 día"),
-  conditions: z.string().optional(),
   ivaPct: z.coerce.number().min(0).max(100),
 });
 

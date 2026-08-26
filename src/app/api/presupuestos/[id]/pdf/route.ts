@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { quoteService } from "@/services/quote.service";
 import { pdfService } from "@/services/pdf.service";
-import { companySettingsRepository } from "@/repositories/company-settings.repository";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const quote = await quoteService.getById(id);
+  const data = await quoteService.getPdfData(id);
 
-  if (!quote) {
+  if (!data) {
     return NextResponse.json({ error: "Presupuesto no encontrado" }, { status: 404 });
   }
 
-  const companySettings = await companySettingsRepository.toConfig();
-  const pdfBytes = await pdfService.generateQuotePdf(quote, companySettings);
+  const { quote, companyInfo } = data;
+  const pdfBytes = await pdfService.generateQuotePdf(quote, companyInfo);
 
   const baseFilename = `Presupuesto N° ${quote.number} - ${quote.client.name}`;
   const asciiFilename =

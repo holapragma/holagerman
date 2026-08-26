@@ -76,8 +76,12 @@ Vercel"). El historial de migraciones de la etapa SQLite quedó archivado en
 - **Clientes** (`/clientes`): CRUD de clientes (nombre, empresa, contacto, notas).
 - **Productos** (`/productos`): CRUD de productos + ficha de detalle con pestañas de
   análisis y mercado (ver más abajo).
-- **Presupuestos** (`/presupuestos`): armado de presupuestos a partir de cliente + productos,
-  generación de PDF tipo propuesta comercial.
+- **Presupuestos** (`/presupuestos`): cotización rápida. Editor tipo planilla donde cada línea
+  se carga escribiendo el nombre: si coincide con un producto del catálogo se autocompleta el
+  precio, y si no, queda como **ítem manual** (opcionalmente se guarda también como producto).
+  Genera un PDF tipo propuesta comercial con la identidad de la empresa emisora elegida.
+- **Empresas**: empresas emisoras (`Configuración → Empresas`). Germán puede emitir
+  presupuestos con más de una identidad comercial sin duplicar clientes ni productos.
 - **Mercado**: precios observados del mercado por producto (competencia, e-commerce, etc.),
   cargados a mano desde la ficha de cada producto. Alimenta la comparación de precio
   sugerido vs. mercado.
@@ -87,10 +91,10 @@ Vercel"). El historial de migraciones de la etapa SQLite quedó archivado en
   historial y estadísticas); hoy conviven ambos modelos.
 - **Proveedores** (`/proveedores`): proveedores, sus cotizaciones históricas y el
   comparador de costos/precio sugerido (ver modelo conceptual abajo).
-- **Configuración** (`/configuracion`): parámetros globales de cálculo de costos (usados
-  como default cuando un proveedor no define los suyos) y datos de la empresa/condiciones
-  comerciales que aparecen en los presupuestos, incluida la alícuota de **IVA** (`ivaPct`
-  en `CompanySettings`).
+- **Configuración** (`/configuracion`): empresas emisoras (CRUD + logo + condiciones
+  comerciales), parámetros globales de cálculo de costos (usados como default cuando un
+  proveedor no define los suyos) y la alícuota de **IVA** (`ivaPct` en `CompanySettings`,
+  el único campo que quedó en ese singleton).
 
 El sistema va a seguir creciendo, pero módulo por módulo, solo cuando resuelva un problema
 real. No adelantar funcionalidad.
@@ -194,6 +198,32 @@ implementarlas antes de que haya una necesidad concreta.
 
 ---
 
+## Empresas emisoras
+
+Un mismo CRM, varias identidades comerciales. **No** son CRMs separados:
+
+```
+CRM
+├── Clientes      ─┐
+├── Productos      │ compartidos entre todas las empresas
+├── Stock         ─┘
+├── Empresas      (Company + CompanyLogo)
+└── Presupuestos  → empresa emisora
+```
+
+- `Company`: nombre comercial, razón social, CUIT, dirección, teléfono, email, sitio web,
+  días de validez, condiciones comerciales, `active` y `isDefault`.
+- El logo se guarda en `CompanyLogo` (`Bytes` + `mimeType`) y se sirve desde
+  `/api/empresas/logos/[id]` con cache inmutable. **Los logos son inmutables**: cambiar el
+  logo de una empresa crea una fila nueva y deja la anterior intacta, para que los
+  presupuestos ya emitidos sigan mostrando el suyo. No se agregó un sistema de storage
+  externo (Supabase Storage / Blob): son pocos archivos chicos y guardarlos en la base
+  evita infraestructura nueva y hace que el PDF los lea sin salir a la red.
+- Una empresa desactivada no se ofrece al armar un presupuesto, pero sigue existiendo en
+  Configuración y en los presupuestos históricos.
+
+---
+
 ## Presupuestos
 
 El PDF de un presupuesto **no es una factura**. El objetivo es que se sienta y se lea como
@@ -210,6 +240,17 @@ Reglas de negocio:
 - El PDF se genera en `src/app/api/presupuestos/[id]/pdf/route.ts`, con nombre de archivo
   `Presupuesto N° {number} - {cliente}.pdf` (headers `filename` + `filename*=UTF-8''` para
   compatibilidad con acentos).
+- **Ítems manuales.** Un ítem de presupuesto no necesita existir en el catálogo:
+  `QuoteItem.productId` es opcional y el ítem guarda su propio `name`, `description`,
+  `unitPrice` y `position`. Si el usuario marca "Guardar también como producto", el
+  producto se crea **dentro de la misma transacción** que el presupuesto (categoría
+  `General`, stock 0) y queda enlazado al ítem.
+- **Un presupuesto es un snapshot.** Nunca se lee el estado actual del catálogo ni de la
+  empresa para mostrar o imprimir un presupuesto ya emitido: el nombre, la descripción y el
+  precio viven en el `QuoteItem`, y los datos de la empresa emisora (incluido el logo) se
+  copian a `Quote` al crearlo (`companyName`, `companyTaxId`, `companyLogoId`, …). Cambiar
+  un producto o una empresa después **no** modifica los presupuestos históricos; borrar un
+  producto del catálogo tampoco los rompe (`onDelete: SetNull`).
 - **IVA opcional por presupuesto.** Al armar un presupuesto se elige con/sin IVA (por
   defecto, con IVA). No hay alícuota editable por presupuesto, solo el on/off — el % sale
   siempre del valor global de `Configuración`. El presupuesto guarda la alícuota aplicada
@@ -235,6 +276,10 @@ mismo problema, no romper la consistencia visual entre módulos.
 - Los listados de clientes/productos/presupuestos/competencia usan un **layout de lista
   custom** (avatar + grilla con headers uppercase + dropdown en hover + versión mobile), no
   el data-table genérico (ese queda reservado para vistas de gran volumen de datos).
+- El editor de presupuestos es la excepción deliberada: se comporta como una **planilla**
+  (una fila por ítem, columnas alineadas en desktop, cards apiladas en mobile) porque la
+  prioridad ahí es velocidad de carga, no densidad de lectura. Enter en el precio agrega la
+  fila siguiente y le da foco.
 
 ---
 

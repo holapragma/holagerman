@@ -17,6 +17,7 @@ export async function updateCompanySettingsAction(formData: unknown) {
   try {
     await companySettingsRepository.update(parsed.data);
     revalidatePath("/configuracion");
+    revalidatePath("/presupuestos/nuevo");
     return { success: true as const };
   } catch {
     return { success: false as const, error: { _form: ["No se pudo actualizar la configuración"] } };

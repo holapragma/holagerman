@@ -204,24 +204,29 @@ export const helpModules: HelpModule[] = [
     href: "/presupuestos",
     icon: FileText,
     tagline:
-      "Armá presupuestos comerciales a partir de un cliente y productos del catálogo, y generá el PDF para enviar.",
+      "Cotizá rápido: agregá ítems del catálogo o escribilos a mano en la misma pantalla, y generá el PDF para enviar.",
     whereToFind: "Menú lateral → Presupuestos.",
     actions: [
-      "Crear presupuestos nuevos",
+      "Crear presupuestos nuevos sin salir de la pantalla",
+      "Agregar ítems que todavía no existen en Productos (y guardarlos en el catálogo si querés)",
+      "Elegir con qué empresa se emite el presupuesto",
       "Buscar presupuestos por cliente",
       "Ver el detalle, editar (como copia nueva) o descargar el PDF de cualquier presupuesto",
       "Eliminar presupuestos",
     ],
     steps: [
       "Entrá en Presupuestos → “Nuevo presupuesto”.",
-      "Seleccioná el cliente.",
-      "Buscá y agregá productos del catálogo; podés ajustar la cantidad y el precio unitario de cada línea.",
-      "Agregá observaciones si hace falta.",
-      "Hacé clic en “Crear presupuesto”.",
+      "Seleccioná el cliente y la empresa emisora.",
+      "Escribí el nombre del ítem: si existe en el catálogo elegilo de la lista y se completa el precio; si no existe, seguí escribiendo y queda como ítem manual.",
+      "Ajustá cantidad, precio y descripción de cada línea. Enter en el precio agrega la fila siguiente.",
+      "Si querés que un ítem manual quede en el catálogo, marcá “Guardar también como producto”.",
+      "Agregá observaciones si hace falta y hacé clic en “Crear presupuesto”.",
     ],
     notes: [
       "Cada presupuesto tiene un número secuencial único (N°): es lo que ve el cliente, nunca un identificador interno.",
       "El PDF no es una factura: está pensado como una propuesta comercial que ayuda a vender.",
+      "Cada línea guarda el nombre, la descripción y el precio con los que se cotizó: si después cambiás el producto en el catálogo, los presupuestos ya emitidos no se modifican.",
+      "Lo mismo vale para la empresa emisora: el presupuesto conserva el logo y los datos con los que fue generado.",
     ],
     subsections: [
       {
@@ -242,7 +247,7 @@ export const helpModules: HelpModule[] = [
         title: "Editar un presupuesto",
         whereToFind: "Presupuestos → (elegís un presupuesto) → “Editar”.",
         actions: [
-          "Modificar cliente, productos u observaciones de un presupuesto ya creado",
+          "Modificar cliente, empresa emisora, ítems u observaciones de un presupuesto ya creado",
         ],
         notes: [
           "Editar NO modifica el presupuesto original: al guardar se crea un presupuesto nuevo (con su propio número) y el original se conserva intacto para siempre. Esto preserva el historial de qué se le propuso al cliente en cada momento.",
@@ -280,20 +285,25 @@ export const helpModules: HelpModule[] = [
     href: "/configuracion",
     icon: Settings,
     tagline:
-      "Los valores por defecto que usa todo el sistema: cómo se calculan los costos y qué datos de tu empresa aparecen en los presupuestos.",
+      "Tus empresas emisoras, los valores por defecto de cálculo de costos y la alícuota de IVA.",
     whereToFind: "Menú lateral → Configuración (al final del menú).",
     actions: [
+      "Crear, editar, activar o desactivar empresas emisoras (nombre comercial, razón social, CUIT, dirección, contacto y logo)",
+      "Marcar cuál es la empresa predeterminada al crear un presupuesto",
+      "Definir la validez en días y las condiciones comerciales de cada empresa (salen en el PDF)",
       "Definir los porcentajes o importes globales de nacionalización, comisión, costos financieros, envío, seguro y otros gastos",
-      "Cargar los datos de tu empresa: nombre, email, teléfono, sitio web y dirección",
-      "Definir la validez en días y las condiciones comerciales que aparecen al pie del PDF de los presupuestos",
+      "Definir la alícuota de IVA",
     ],
     steps: [
       "Entrá en Configuración.",
+      "En “Empresas”, creá cada empresa con la que emitís presupuestos y subí su logo (PNG o JPG, hasta 2 MB).",
       "Completá los valores de cálculo de costos (se usan cuando un proveedor no define los suyos propios).",
-      "Completá los datos de tu empresa y las condiciones comerciales.",
+      "Revisá la alícuota de IVA.",
       "Guardá cada sección con su botón correspondiente.",
     ],
     notes: [
+      "Clientes, productos y stock son compartidos entre todas las empresas: lo único que cambia por empresa es la identidad del presupuesto.",
+      "Cambiar los datos o el logo de una empresa no modifica los presupuestos ya emitidos: cada uno conserva la identidad con la que se generó.",
       "Los costos definidos acá son el default global: si un proveedor tiene su propia configuración, esa tiene prioridad por sobre la global.",
     ],
   },
@@ -376,9 +386,20 @@ export const helpFlows: HelpFlow[] = [
     moduleId: "presupuestos",
     steps: [
       "Entrá en Presupuestos → “Nuevo presupuesto”.",
-      "Seleccioná el cliente.",
-      "Agregá productos del catálogo y ajustá cantidad/precio si hace falta.",
+      "Seleccioná el cliente y la empresa emisora.",
+      "Escribí cada ítem: elegilo del catálogo o cargalo a mano, y ajustá cantidad/precio.",
       "Hacé clic en “Crear presupuesto”.",
+    ],
+  },
+  {
+    id: "item-manual",
+    question: "¿Cómo cotizo algo que todavía no está en Productos?",
+    moduleId: "presupuestos",
+    steps: [
+      "En “Nuevo presupuesto”, escribí el nombre del ítem en la fila.",
+      "Ignorá las sugerencias del catálogo y completá cantidad y precio.",
+      "Si además querés que quede en el catálogo, marcá “Guardar también como producto”: se crea en Productos al guardar el presupuesto.",
+      "Si no marcás la casilla, el ítem existe solo dentro de ese presupuesto y no ensucia el catálogo.",
     ],
   },
   {
@@ -425,9 +446,19 @@ export const helpFlows: HelpFlow[] = [
     question: "¿Cómo configuro los datos que aparecen en el PDF de presupuestos?",
     moduleId: "configuracion",
     steps: [
-      "Entrá en Configuración.",
-      "Completá los datos de la empresa y las condiciones comerciales.",
-      "Guardá — se van a usar en todos los presupuestos generados a partir de ahora.",
+      "Entrá en Configuración → Empresas.",
+      "Editá la empresa (o creá una nueva) y completá logo, datos fiscales y condiciones comerciales.",
+      "Guardá — se van a usar en los presupuestos que emitas con esa empresa de ahora en más.",
+    ],
+  },
+  {
+    id: "varias-empresas",
+    question: "¿Cómo trabajo con más de una empresa?",
+    moduleId: "configuracion",
+    steps: [
+      "Entrá en Configuración → Empresas y creá cada empresa con su logo y sus datos.",
+      "Al armar un presupuesto, elegí la empresa emisora en el selector de arriba.",
+      "El PDF sale con el logo, los datos fiscales y las condiciones de esa empresa. No se duplican clientes ni productos: son los mismos para todas las empresas.",
     ],
   },
 ];
@@ -485,9 +516,9 @@ export interface QuickStartStep {
 
 export const quickStartSteps: QuickStartStep[] = [
   {
-    title: "Configurá tu empresa",
+    title: "Cargá tus empresas",
     description:
-      "Cargá los datos que van a aparecer en el encabezado y el pie de tus presupuestos en PDF.",
+      "Creá cada empresa emisora con su logo y sus datos: es la identidad que va a aparecer en el PDF.",
     moduleId: "configuracion",
   },
   {

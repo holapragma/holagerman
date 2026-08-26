@@ -13,6 +13,8 @@ async function main() {
   await prisma.supplier.deleteMany();
   await prisma.costSettings.deleteMany();
   await prisma.companySettings.deleteMany();
+  await prisma.company.deleteMany();
+  await prisma.companyLogo.deleteMany();
   await prisma.product.deleteMany();
   await prisma.client.deleteMany();
 
@@ -195,23 +197,45 @@ async function main() {
   await prisma.companySettings.upsert({
     where: { id: "global" },
     update: {},
-    create: {
-      id: "global",
-      name: "German CRM",
-      email: "ventas@germancrm.com",
-      phone: "+54 11 1234-5678",
-      address: "Av. Corrientes 1234, CABA, Argentina",
-      website: "https://www.germancrm.com",
-      quoteValidityDays: 30,
-      conditions: [
-        "Validez del presupuesto: 30 días desde la fecha de emisión",
-        "Forma de pago: a convenir (transferencia, cheque, efectivo)",
-        "Tiempo de entrega: a confirmar según disponibilidad de stock",
-        "Garantía: según términos del fabricante",
-        "Disponibilidad sujeta a stock al momento de la confirmación",
-      ].join("\n"),
-    },
+    create: { id: "global", ivaPct: 21 },
   });
+
+  const CONDITIONS = [
+    "Validez del presupuesto: 30 días desde la fecha de emisión",
+    "Forma de pago: a convenir (transferencia, cheque, efectivo)",
+    "Tiempo de entrega: a confirmar según disponibilidad de stock",
+    "Garantía: según términos del fabricante",
+    "Disponibilidad sujeta a stock al momento de la confirmación",
+  ].join("\n");
+
+  const companies = await Promise.all([
+    prisma.company.create({
+      data: {
+        name: "AGRES",
+        legalName: "AGRES S.A.",
+        taxId: "30-71234567-8",
+        email: "ventas@agres.com",
+        phone: "+54 11 1234-5678",
+        address: "Av. Corrientes 1234, CABA, Argentina",
+        website: "https://www.agres.com",
+        quoteValidityDays: 30,
+        conditions: CONDITIONS,
+        isDefault: true,
+      },
+    }),
+    prisma.company.create({
+      data: {
+        name: "FIG Construcciones",
+        legalName: "FIG Construcciones S.R.L.",
+        taxId: "30-70987654-3",
+        email: "obras@figconstrucciones.com",
+        phone: "+54 11 8765-4321",
+        address: "Av. Rivadavia 5678, CABA, Argentina",
+        quoteValidityDays: 15,
+        conditions: CONDITIONS,
+      },
+    }),
+  ]);
 
   const today = new Date();
   const date1 = new Date(today.getFullYear(), today.getMonth() - 2, 1);
@@ -377,32 +401,59 @@ async function main() {
     ],
   });
 
+  const issuer = companies[0];
+
   const quote = await prisma.quote.create({
     data: {
       number: 1,
       clientId: clients[0].id,
       notes: "Precios válidos por 15 días. Incluye garantía oficial.",
-      subtotal: 1339997,
-      total: 1339997,
+      subtotal: 1489997,
+      total: 1489997,
+      companyId: issuer.id,
+      companyName: issuer.name,
+      companyLegalName: issuer.legalName,
+      companyTaxId: issuer.taxId,
+      companyAddress: issuer.address,
+      companyPhone: issuer.phone,
+      companyEmail: issuer.email,
+      companyWebsite: issuer.website,
+      companyConditions: issuer.conditions,
+      companyValidityDays: issuer.quoteValidityDays,
       items: {
         create: [
           {
             productId: products[0].id,
+            name: products[0].name,
+            position: 0,
             quantity: 1,
             unitPrice: 899999,
             subtotal: 899999,
           },
           {
             productId: products[1].id,
+            name: products[1].name,
+            position: 1,
             quantity: 1,
             unitPrice: 349999,
             subtotal: 349999,
           },
           {
             productId: products[2].id,
+            name: products[2].name,
+            position: 2,
             quantity: 1,
             unitPrice: 89999,
             subtotal: 89999,
+          },
+          {
+            // Ítem manual: no existe en el catálogo, vive solo en este presupuesto.
+            name: "Instalación y puesta en marcha",
+            description: "Incluye traslado y configuración inicial en el domicilio del cliente",
+            position: 3,
+            quantity: 1,
+            unitPrice: 150000,
+            subtotal: 150000,
           },
         ],
       },
@@ -416,7 +467,8 @@ async function main() {
   console.log("- 3 registros de competencia");
   console.log(`- ${suppliers.length} proveedores`);
   console.log("- Configuración global de costos");
-  console.log("- Configuración de empresa y condiciones comerciales");
+  console.log(`- ${companies.length} empresas emisoras (${companies.map((c) => c.name).join(", ")})`);
+  console.log("- Configuración de IVA y condiciones comerciales por empresa");
   console.log("- Cotizaciones de proveedores con historial");
   console.log("- Observaciones de mercado");
 }
