@@ -26,16 +26,7 @@ export class CompanySettingsRepository {
 
   async toConfig(): Promise<CompanySettingsConfig> {
     const settings = await this.get();
-    return {
-      name: settings.name,
-      email: settings.email ?? null,
-      phone: settings.phone ?? null,
-      address: settings.address ?? null,
-      website: settings.website ?? null,
-      quoteValidityDays: settings.quoteValidityDays,
-      conditions: settings.conditions ?? "",
-      ivaPct: settings.ivaPct,
-    };
+    return { ivaPct: settings.ivaPct };
   }
 }
 

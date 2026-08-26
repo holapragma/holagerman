@@ -222,15 +222,17 @@ Modelos definidos en `prisma/schema.prisma` (provider `postgresql`, generador `p
 | --------------------- | ---------------------------------------------------------------------------- |
 | `Client`               | Clientes. Relación 1-N con `Quote`.                                          |
 | `Product`              | Productos/catálogo. Relación 1-N con `QuoteItem`, `CompetitionEntry`, `SupplierQuote`, `MarketObservation`. |
-| `Quote`                | Presupuestos. `number` es `Int @unique` (secuencial). Relación N-1 con `Client`, 1-N con `QuoteItem`. |
-| `QuoteItem`            | Líneas de un presupuesto. Relación N-1 con `Quote` y `Product`.               |
+| `Quote`                | Presupuestos. `number` es `Int @unique` (secuencial). Relación N-1 con `Client` y con `Company`, 1-N con `QuoteItem`. Guarda además un snapshot de la empresa emisora (`companyName`, `companyTaxId`, `companyLogoId`, …). |
+| `QuoteItem`            | Líneas de un presupuesto. `name`/`description`/`unitPrice` son un snapshot; `productId` es opcional (ítems manuales) y N-1 con `Product`. |
 | `CompetitionEntry`     | Precios de competencia por producto.                                          |
 | `Supplier`              | Proveedores. Relación 1-1 con `SupplierCostConfig`, 1-N con `SupplierQuote`.  |
 | `SupplierCostConfig`    | Configuración de costos por proveedor (opcional, override de `CostSettings`). |
 | `SupplierQuote`         | Cotizaciones históricas de proveedores por producto.                          |
 | `MarketObservation`     | Precios observados en el mercado por producto.                                |
 | `CostSettings`          | Configuración global de costos (singleton, `id: "global"`).                   |
-| `CompanySettings`       | Datos de la empresa usados en presupuestos (singleton, `id: "global"`).       |
+| `CompanySettings`       | Parámetros globales de presupuestos: hoy solo `ivaPct` (singleton, `id: "global"`). |
+| `Company`               | Empresas emisoras (nombre comercial, razón social, CUIT, contacto, condiciones, logo, activa/predeterminada). |
+| `CompanyLogo`           | Logos subidos (`Bytes` + `mimeType`). Inmutables: cambiar el logo crea una fila nueva, así los presupuestos históricos conservan el suyo. |
 
 Todos los modelos usan `id String @default(cuid())` y mapean (`@@map`) a tablas `snake_case` con prefijo **`german_crm_`** (ej. `german_crm_clients`, `german_crm_supplier_quotes`). Los nombres de columnas se mapean a `camelCase` en el cliente de Prisma.
 

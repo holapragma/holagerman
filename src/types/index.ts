@@ -1,5 +1,7 @@
 import type {
   Client,
+  Company,
+  CompanyLogo,
   CompetitionEntry,
   Product,
   Quote,
@@ -14,6 +16,8 @@ import type {
 
 export type {
   Client,
+  Company,
+  CompanyLogo,
   Product,
   Quote,
   QuoteItem,
@@ -26,9 +30,37 @@ export type {
   CompanySettings,
 };
 
+export type CompanyLogoRef = {
+  id: string;
+  mimeType: string;
+  createdAt: Date;
+};
+
+export type CompanyWithLogo = Company & {
+  logo: CompanyLogoRef | null;
+};
+
 export type QuoteWithRelations = Quote & {
   client: Client;
-  items: (QuoteItem & { product: Product })[];
+  company: Company | null;
+  items: (QuoteItem & { product: Product | null })[];
+};
+
+/**
+ * Datos de la empresa emisora tal como quedaron congelados en el presupuesto.
+ * Nunca se leen de la empresa actual: un presupuesto es un snapshot.
+ */
+export type QuoteCompanySnapshot = {
+  name: string;
+  legalName: string | null;
+  taxId: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  conditions: string;
+  quoteValidityDays: number;
+  logoId: string | null;
 };
 
 export type CompetitionEntryWithProduct = CompetitionEntry & {
@@ -74,13 +106,26 @@ export type DashboardData = {
 };
 
 export type CreateQuoteItemInput = {
-  productId: string;
+  productId: string | null;
+  name: string;
+  description: string | null;
   quantity: number;
   unitPrice: number;
+  /**
+   * Cuando el ítem es manual y el usuario marcó "guardar como producto", el
+   * producto se crea dentro de la misma transacción y queda enlazado al ítem.
+   */
+  createProduct?: {
+    name: string;
+    category: string;
+    price: number;
+  } | null;
 };
 
 export type CreateQuoteInput = {
   clientId: string;
+  companyId: string | null;
+  companySnapshot: QuoteCompanySnapshot | null;
   notes?: string;
   items: CreateQuoteItemInput[];
   ivaPct: number | null;
@@ -104,13 +149,6 @@ export type CostConfig = {
 };
 
 export type CompanySettingsConfig = {
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  website: string | null;
-  quoteValidityDays: number;
-  conditions: string;
   ivaPct: number;
 };
 

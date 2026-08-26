@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, FileText, Pencil } from "lucide-react";
+import { Building2, Download, FileText, Pencil } from "lucide-react";
 import type { QuoteWithRelations } from "@/types";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PageHeader } from "@/components/layout/page-header";
@@ -22,6 +22,16 @@ import {
 } from "@/components/ui/table";
 
 export function QuoteDetail({ quote }: { quote: QuoteWithRelations }) {
+  // Siempre el snapshot: el presupuesto muestra lo que se cotizó ese día.
+  const companyName = quote.companyName ?? quote.company?.name ?? null;
+  const companyDetails = [
+    quote.companyLegalName,
+    quote.companyTaxId ? `CUIT ${quote.companyTaxId}` : null,
+    quote.companyAddress,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <>
       <PageHeader
@@ -78,10 +88,12 @@ export function QuoteDetail({ quote }: { quote: QuoteWithRelations }) {
                 {quote.items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="pl-6">
-                      <p className="font-medium">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.product.category}
-                      </p>
+                      <p className="font-medium">{item.name}</p>
+                      {item.description ? (
+                        <p className="text-xs text-muted-foreground">
+                          {item.description}
+                        </p>
+                      ) : null}
                     </TableCell>
                     <TableCell className="tabular-nums">{item.quantity}</TableCell>
                     <TableCell className="tabular-nums">
@@ -101,10 +113,12 @@ export function QuoteDetail({ quote }: { quote: QuoteWithRelations }) {
               <li key={item.id} className="px-6 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{item.product.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.product.category}
-                    </p>
+                    <p className="truncate font-medium">{item.name}</p>
+                    {item.description ? (
+                      <p className="text-xs text-muted-foreground">
+                        {item.description}
+                      </p>
+                    ) : null}
                   </div>
                   <p className="shrink-0 font-medium tabular-nums">
                     {formatCurrency(item.subtotal)}
@@ -119,6 +133,35 @@ export function QuoteDetail({ quote }: { quote: QuoteWithRelations }) {
         </Card>
 
         <div className="space-y-6">
+          {companyName ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Empresa emisora</CardTitle>
+                <CardDescription>Identidad usada en el PDF</CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center gap-3 pb-6">
+                <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-border/70 bg-card">
+                  {quote.companyLogoId ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/empresas/logos/${quote.companyLogoId}`}
+                      alt={companyName}
+                      className="size-full object-contain p-1"
+                    />
+                  ) : (
+                    <Building2 className="size-5 text-muted-foreground/60" strokeWidth={1.5} />
+                  )}
+                </div>
+                <div className="min-w-0 text-sm">
+                  <p className="truncate font-medium">{companyName}</p>
+                  {companyDetails ? (
+                    <p className="truncate text-xs text-muted-foreground">{companyDetails}</p>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardHeader>
               <CardTitle>Cliente</CardTitle>

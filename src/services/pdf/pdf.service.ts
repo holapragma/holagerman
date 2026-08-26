@@ -15,7 +15,7 @@ import { ImportantNoticeComponent } from "./components/ImportantNoticeComponent"
 import { FooterComponent } from "./components/FooterComponent";
 
 const PAGE_SIZE: [number, number] = [595.28, 841.89];
-const FOOTER_RESERVED = 75;
+const FOOTER_RESERVED = 55;
 const MAX_TOP_PADDING = 115;
 
 export class PdfService {
@@ -93,8 +93,11 @@ export class PdfService {
     quote: QuoteWithRelations,
     companyInfo: CompanyInfo & { conditions: string },
   ): void {
+    // El PDF siempre imprime el snapshot guardado en el ítem, nunca el producto
+    // actual del catálogo.
     const productRows = quote.items.map((item) => ({
-      name: item.product.name,
+      name: item.name,
+      description: item.description,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       subtotal: item.subtotal,
@@ -245,7 +248,7 @@ export class PdfService {
         page,
         pageNumber: i + 1,
         totalPages,
-        y: margin + 60,
+        y: margin + 40,
       };
       await this.footerComponent.render(footerCtx);
     }

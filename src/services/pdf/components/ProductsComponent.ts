@@ -1,4 +1,4 @@
-import type { LayoutContext, Component } from "../pdf.types";
+import type { LayoutContext, Component, ProductRow } from "../pdf.types";
 import {
   drawText,
   drawLine,
@@ -11,12 +11,9 @@ import {
   formatCurrency,
 } from "../pdf.utils";
 
-interface ProductRow {
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-}
+const ROW_HEIGHT = 30;
+const DESCRIPTION_EXTRA = 13;
+const HEADER_BLOCK = 66;
 
 export class ProductsComponent implements Component {
   private rows: ProductRow[] = [];
@@ -24,6 +21,16 @@ export class ProductsComponent implements Component {
   setRows(rows: ProductRow[]): this {
     this.rows = rows;
     return this;
+  }
+
+  estimateHeight(): number {
+    return (
+      HEADER_BLOCK +
+      this.rows.reduce(
+        (total, row) => total + ROW_HEIGHT + (row.description ? DESCRIPTION_EXTRA : 0),
+        0,
+      )
+    );
   }
 
   async render(ctx: LayoutContext): Promise<number> {
@@ -109,14 +116,33 @@ export class ProductsComponent implements Component {
 
     y = bandTop - headerRowHeight - SPACING.xs;
 
-    const rowHeight = 30;
     for (let i = 0; i < this.rows.length; i++) {
       const row = this.rows[i];
+      const rowHeight = ROW_HEIGHT + (row.description ? DESCRIPTION_EXTRA : 0);
       y -= rowHeight;
-      const textY = y + rowHeight / 2 - FONT_SIZES.sm / 2.8;
+      const textY = row.description
+        ? y + rowHeight - FONT_SIZES.sm * 1.55
+        : y + rowHeight / 2 - FONT_SIZES.sm / 2.8;
 
       const productName = await truncateText(ctx, row.name, FONT_SIZES.sm, "bold", colWidths.product - SPACING.xs);
       await drawText(ctx, productName, { x: colX.product, y: textY, size: FONT_SIZES.sm, color: colors.textPrimary, font: "bold" });
+
+      if (row.description) {
+        const description = await truncateText(
+          ctx,
+          row.description,
+          FONT_SIZES.xs - 1,
+          "regular",
+          colWidths.product - SPACING.xs,
+        );
+        await drawText(ctx, description, {
+          x: colX.product,
+          y: textY - DESCRIPTION_EXTRA,
+          size: FONT_SIZES.xs - 1,
+          color: colors.textMuted,
+          font: "regular",
+        });
+      }
       await drawText(ctx, String(row.quantity), {
         x: colX.qty + colWidths.qty / 2,
         y: textY,

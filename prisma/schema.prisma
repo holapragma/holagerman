@@ -51,19 +51,39 @@ model Quote {
   updatedAt DateTime    @updatedAt
   items     QuoteItem[]
 
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  companyName         String?
+  companyLegalName    String?
+  companyTaxId        String?
+  companyAddress      String?
+  companyPhone        String?
+  companyEmail        String?
+  companyWebsite      String?
+  companyConditions   String?
+  companyValidityDays Int?
+  companyLogoId       String?
+  companyLogo         CompanyLogo? @relation("QuoteCompanyLogo", fields: [companyLogoId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
   @@map("german_crm_quotes")
 }
 
 model QuoteItem {
-  id        String  @id @default(cuid())
-  quoteId   String
-  quote     Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-  quantity  Int
-  unitPrice Float
-  subtotal  Float
+  id          String   @id @default(cuid())
+  quoteId     String
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name        String
+  description String?
+  position    Int      @default(0)
+  quantity    Int
+  unitPrice   Float
+  subtotal    Float
 
+  @@index([quoteId])
   @@map("german_crm_quote_items")
 }
 
@@ -172,16 +192,42 @@ model CostSettings {
 }
 
 model CompanySettings {
-  id                String   @id @default("global")
-  name              String   @default("German CRM")
-  email             String?
-  phone             String?
-  address           String?
-  website           String?
-  quoteValidityDays Int      @default(30)
-  conditions        String?  @default("Validez del presupuesto: 30 días desde la fecha de emisión\nForma de pago: a convenir (transferencia, cheque, efectivo)\nTiempo de entrega: a confirmar según disponibilidad de stock\nGarantía: según términos del fabricante\nDisponibilidad sujeta a stock al momento de la confirmación")
-  ivaPct            Float    @default(21)
-  updatedAt         DateTime @updatedAt
+  id        String   @id @default("global")
+  ivaPct    Float    @default(21)
+  updatedAt DateTime @updatedAt
 
   @@map("german_crm_company_settings")
+}
+
+model Company {
+  id                String   @id @default(cuid())
+  name              String
+  legalName         String?
+  taxId             String?
+  address           String?
+  phone             String?
+  email             String?
+  website           String?
+  quoteValidityDays Int      @default(30)
+  conditions        String?
+  active            Boolean  @default(true)
+  isDefault         Boolean  @default(false)
+  logoId            String?
+  logo              CompanyLogo? @relation("CompanyLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  quotes            Quote[]
+
+  @@map("german_crm_companies")
+}
+
+model CompanyLogo {
+  id        String   @id @default(cuid())
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+  companies Company[] @relation("CompanyLogo")
+  quotes    Quote[]   @relation("QuoteCompanyLogo")
+
+  @@map("german_crm_company_logos")
 }
