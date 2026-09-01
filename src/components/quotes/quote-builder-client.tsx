@@ -47,8 +47,12 @@ type EditorLine = QuoteLine & { key: string };
 const panelClass =
   "rounded-(--radius-card) border border-border/70 bg-card p-6 shadow-(--shadow-card)";
 
+/**
+ * La planilla responde al ancho del panel de ítems (container query), no al de la
+ * ventana: debajo de 520px de panel cada ítem se apila como card.
+ */
 const GRID =
-  "md:grid md:grid-cols-[minmax(0,1fr)_72px_124px_112px_auto] md:gap-3";
+  "@min-[520px]:grid @min-[520px]:grid-cols-[minmax(0,1fr)_68px_minmax(104px,0.55fr)_minmax(92px,0.5fr)_100px] @min-[520px]:gap-2 @min-[700px]:gap-3";
 
 let lineCounter = 0;
 function newLine(partial?: Partial<QuoteLine>): EditorLine {
@@ -295,7 +299,7 @@ export function QuoteBuilderClient({
         </div>
       </motion.section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,0.8fr)] lg:items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,0.8fr)] xl:items-start">
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -314,173 +318,175 @@ export function QuoteBuilderClient({
             </p>
           </div>
 
-          <div
-            className={cn(
-              "hidden border-b border-border/70 pb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase",
-              GRID,
-            )}
-          >
-            <span>Producto / Descripción</span>
-            <span className="text-center">Cant.</span>
-            <span className="text-right">Precio</span>
-            <span className="text-right">Subtotal</span>
-            <span className="w-[84px]" />
-          </div>
+          <div className="@container">
+            <div
+              className={cn(
+                "hidden border-b border-border/70 pb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase",
+                GRID,
+              )}
+            >
+              <span className="min-w-0 truncate">Producto / Descripción</span>
+              <span className="min-w-0 text-center">Cant.</span>
+              <span className="min-w-0 text-right">Precio</span>
+              <span className="min-w-0 text-right">Subtotal</span>
+              <span aria-hidden />
+            </div>
 
-          <ul className="divide-y divide-border/60">
-            {lines.map((line, index) => (
-              <li
-                key={line.key}
-                className={cn(
-                  "space-y-3 py-4 md:space-y-0 md:py-3",
-                  GRID,
-                  "md:items-start",
-                )}
-              >
-                <div className="space-y-2">
-                  <ProductPicker
-                    value={line.name}
-                    products={products}
-                    linked={!!line.productId}
-                    inputRef={registerInput(line.key, "name")}
-                    onChange={(value) =>
-                      updateLine(line.key, { name: value, productId: null })
-                    }
-                    onPick={(product) =>
-                      updateLine(line.key, {
-                        productId: product.id,
-                        name: product.name,
-                        unitPrice: product.price,
-                        saveAsProduct: false,
-                      })
-                    }
-                    onEnter={() => focusInput(line.key, "quantity")}
-                  />
+            <ul className="divide-y divide-border/60">
+              {lines.map((line, index) => (
+                <li
+                  key={line.key}
+                  className={cn(
+                    "space-y-3 py-4 @min-[520px]:space-y-0 @min-[520px]:py-3",
+                    GRID,
+                    "@min-[520px]:items-start",
+                  )}
+                >
+                  <div className="min-w-0 space-y-2">
+                    <ProductPicker
+                      value={line.name}
+                      products={products}
+                      linked={!!line.productId}
+                      inputRef={registerInput(line.key, "name")}
+                      onChange={(value) =>
+                        updateLine(line.key, { name: value, productId: null })
+                      }
+                      onPick={(product) =>
+                        updateLine(line.key, {
+                          productId: product.id,
+                          name: product.name,
+                          unitPrice: product.price,
+                          saveAsProduct: false,
+                        })
+                      }
+                      onEnter={() => focusInput(line.key, "quantity")}
+                    />
 
-                  <Input
-                    value={line.description}
-                    placeholder="Descripción (opcional)"
-                    onChange={(event) =>
-                      updateLine(line.key, { description: event.target.value })
-                    }
-                    className="h-9 rounded-[12px] border-transparent bg-secondary/50 text-xs placeholder:text-muted-foreground/70"
-                  />
+                    <Input
+                      value={line.description}
+                      placeholder="Descripción (opcional)"
+                      onChange={(event) =>
+                        updateLine(line.key, { description: event.target.value })
+                      }
+                      className="h-9 rounded-[12px] border-transparent bg-secondary/50 text-xs placeholder:text-muted-foreground/70"
+                    />
 
-                  {!line.productId && line.name.trim() ? (
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-xs whitespace-nowrap text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        checked={line.saveAsProduct}
+                    {!line.productId && line.name.trim() ? (
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-xs whitespace-nowrap text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={line.saveAsProduct}
+                          onChange={(event) =>
+                            updateLine(line.key, { saveAsProduct: event.target.checked })
+                          }
+                          className="size-3.5 rounded-[4px] accent-[var(--primary)]"
+                        />
+                        Guardar también como producto
+                      </label>
+                    ) : null}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 @min-[520px]:contents">
+                    <div className="min-w-0">
+                      <Label className="text-[11px] text-muted-foreground @min-[520px]:hidden">
+                        Cantidad
+                      </Label>
+                      <Input
+                        ref={registerInput(line.key, "quantity")}
+                        type="number"
+                        min={1}
+                        inputMode="numeric"
+                        value={line.quantity}
                         onChange={(event) =>
-                          updateLine(line.key, { saveAsProduct: event.target.checked })
+                          updateLine(line.key, {
+                            quantity: Number(event.target.value) || 1,
+                          })
                         }
-                        className="size-3.5 rounded-[4px] accent-[var(--primary)]"
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            focusInput(line.key, "unitPrice");
+                          }
+                        }}
+                        className="mt-1 h-10 rounded-[12px] text-center tabular-nums @min-[520px]:mt-0"
                       />
-                      Guardar también como producto
-                    </label>
-                  ) : null}
-                </div>
+                    </div>
 
-                <div className="grid grid-cols-3 gap-3 md:contents">
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground md:hidden">
-                      Cantidad
-                    </Label>
-                    <Input
-                      ref={registerInput(line.key, "quantity")}
-                      type="number"
-                      min={1}
-                      inputMode="numeric"
-                      value={line.quantity}
-                      onChange={(event) =>
-                        updateLine(line.key, {
-                          quantity: Number(event.target.value) || 1,
-                        })
-                      }
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          focusInput(line.key, "unitPrice");
+                    <div className="min-w-0">
+                      <Label className="text-[11px] text-muted-foreground @min-[520px]:hidden">
+                        Precio
+                      </Label>
+                      <Input
+                        ref={registerInput(line.key, "unitPrice")}
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        inputMode="decimal"
+                        value={line.unitPrice}
+                        onChange={(event) =>
+                          updateLine(line.key, {
+                            unitPrice: Number(event.target.value) || 0,
+                          })
                         }
-                      }}
-                      className="mt-1 h-10 rounded-[12px] text-center tabular-nums md:mt-0"
-                    />
-                  </div>
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            if (index === lines.length - 1) addLine();
+                            else focusInput(lines[index + 1].key, "name");
+                          }
+                        }}
+                        className="mt-1 h-10 rounded-[12px] text-right tabular-nums @min-[520px]:mt-0"
+                      />
+                    </div>
 
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground md:hidden">
-                      Precio
-                    </Label>
-                    <Input
-                      ref={registerInput(line.key, "unitPrice")}
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      inputMode="decimal"
-                      value={line.unitPrice}
-                      onChange={(event) =>
-                        updateLine(line.key, {
-                          unitPrice: Number(event.target.value) || 0,
-                        })
-                      }
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          if (index === lines.length - 1) addLine();
-                          else focusInput(lines[index + 1].key, "name");
-                        }
-                      }}
-                      className="mt-1 h-10 rounded-[12px] text-right tabular-nums md:mt-0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground md:hidden">
-                      Subtotal
-                    </Label>
-                    <div className="mt-1 flex h-10 items-center justify-end rounded-[12px] bg-secondary/60 px-3 text-sm font-semibold tabular-nums md:mt-0 md:bg-transparent md:px-0">
-                      {formatCurrency(line.quantity * line.unitPrice)}
+                    <div className="col-span-2 min-w-0 @min-[520px]:col-auto">
+                      <Label className="text-[11px] text-muted-foreground @min-[520px]:hidden">
+                        Subtotal
+                      </Label>
+                      <div className="mt-1 flex h-10 items-center justify-end rounded-[12px] bg-secondary/60 px-3 text-sm font-semibold tabular-nums @min-[520px]:mt-0 @min-[520px]:bg-transparent @min-[520px]:px-0">
+                        {formatCurrency(line.quantity * line.unitPrice)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-end md:pt-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="size-8 rounded-full"
-                    disabled={index === 0}
-                    onClick={() => moveLine(line.key, -1)}
-                    aria-label="Subir ítem"
-                  >
-                    <ArrowUp className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="size-8 rounded-full"
-                    disabled={index === lines.length - 1}
-                    onClick={() => moveLine(line.key, 1)}
-                    aria-label="Bajar ítem"
-                  >
-                    <ArrowDown className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="size-8 rounded-full text-destructive hover:bg-destructive/10"
-                    onClick={() => removeLine(line.key)}
-                    aria-label="Quitar ítem"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  <div className="flex items-center justify-end gap-0.5 @min-[520px]:gap-0 @min-[520px]:justify-self-end @min-[520px]:pt-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="size-8 rounded-full"
+                      disabled={index === 0}
+                      onClick={() => moveLine(line.key, -1)}
+                      aria-label="Subir ítem"
+                    >
+                      <ArrowUp className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="size-8 rounded-full"
+                      disabled={index === lines.length - 1}
+                      onClick={() => moveLine(line.key, 1)}
+                      aria-label="Bajar ítem"
+                    >
+                      <ArrowDown className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="size-8 rounded-full text-destructive hover:bg-destructive/10"
+                      onClick={() => removeLine(line.key)}
+                      aria-label="Quitar ítem"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <Button
             type="button"
@@ -502,7 +508,7 @@ export function QuoteBuilderClient({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className={cn(panelClass, "lg:sticky lg:top-24")}
+          className={cn(panelClass, "xl:sticky xl:top-24")}
         >
           <h2 className="mb-5 text-base font-semibold tracking-tight">Resumen</h2>
 
