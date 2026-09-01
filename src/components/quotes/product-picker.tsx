@@ -101,7 +101,7 @@ export function ProductPicker({
   };
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative min-w-0">
       <div className="relative">
         {linked ? (
           <Package className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-primary" />
@@ -123,7 +123,7 @@ export function ProductPicker({
       </div>
 
       {open && suggestions.length ? (
-        <div className="absolute top-[calc(100%+4px)] left-0 z-50 w-full min-w-[300px] overflow-hidden rounded-[14px] border border-border/70 bg-card p-1.5 shadow-[0_8px_30px_rgb(16_24_40/0.12)]">
+        <div className="absolute top-[calc(100%+4px)] left-0 z-50 w-full min-w-[260px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[14px] border border-border/70 bg-card p-1.5 shadow-[0_8px_30px_rgb(16_24_40/0.12)]">
           {suggestions.map((product, index) => (
             <button
               key={product.id}
